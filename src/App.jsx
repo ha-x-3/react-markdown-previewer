@@ -2,6 +2,8 @@ import { useState } from 'react';
 import './App.css';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import Prism from 'prismjs';
+import 'prismjs/themes/prism.css';
 
 function App() {
 
@@ -15,8 +17,25 @@ function App() {
   const [textArea, setTextArea] = useState(initialText);
 
   const parsedText = (textArea) => {
-    const sanitizedHTML = DOMPurify.sanitize(marked.parse(textArea));
-    return sanitizedHTML;
+		// Parse the Markdown content
+		const parsedMarkdown = marked.parse(textArea);
+
+		// Use the Prism highlight function to highlight code blocks
+		const highlightedCode = parsedMarkdown.replace(
+			/(<pre><code\s*>)([\s\S]*?)(<\/code><\/pre>)/g,
+			(_, $1, $2, $3) => {
+				let codeBlock = $2;
+				const highlighted = Prism.highlight(
+					codeBlock,
+					Prism.languages.javascript
+				);
+				return `${$1}${highlighted}${$3}`;
+			}
+		);
+
+		// Sanitize the HTML
+		const sanitizedHTML = DOMPurify.sanitize(highlightedCode);
+		return sanitizedHTML;
   };
 
 	return (
